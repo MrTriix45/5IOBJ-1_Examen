@@ -1,0 +1,6 @@
+@KaamelottProxy_HostAddress = http://localhost:5138
+
+GET {{KaamelottProxy_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,94 @@
+@page "/kaamelott"
+@inject HttpClient Http
+<h1>Kaamelott</h1>
+
+<div>
+    <legend>Filtrer les citations</legend>
+    <label>Filtrer par personnage :</label>
+    <input @bind="filtrePersonnage" @bind:event="oninput" placeholder="ex: Gauvain" />
+    <label>Filtrer par saison :</label>
+    <input @bind="filtreSaison" @bind:event="oninput" placeholder="ex: Livre 1" />
+    <button @onclick="AppliquerFiltres">Appliquer les filtres</button>
+</div>
+
+@if (citations == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (citationsAffichees != null)
+{
+    @if (!citationsAffichees.Any())
+    {
+        <p><em>Aucune citation trouvée pour ce personnage.</em></p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Personnage</th>
+                    <th>Saison</th>
+                    <th>Episode</th>
+                    <th>Citation</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in citationsAffichees)
+                {
+                    <tr>
+                        <td>@item.Infos.Personnage</td>
+                        <td>@item.Infos.Saison</td>
+                        <td>@item.Infos.Episode</td>
+                        <td>@item.Citation</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+@code{
+    private KaamelottResponse? response;
+    private List<KaamelottCitation>? citations;
+    private string filtrePersonnage = "";
+    private string filtreSaison = "";
+    private List<KaamelottCitation>? citationsAffichees;
+    public class KaamelottResponse
+    {
+        public int Status { get; set; }
+        public List<KaamelottCitation> Citation { get; set; }
+    }
+
+    public class KaamelottCitation
+    {
+        public string Citation { get; set; }
+        public KaamelottCitationInfo Infos { get; set; }
+    }
+
+    public class KaamelottCitationInfo
+    {
+        public string Auteur { get; set; }
+        public string Acteur { get; set; }
+        public string Personnage { get; set; }
+        public string Saison { get; set; }
+        public string Episode { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new HttpClient();
+        response = await client.GetFromJsonAsync<KaamelottResponse>("http://localhost:5138/api/kaamelott");
+        citations = response?.Citation;
+    }
+    private void AppliquerFiltres()
+    {
+        filtrePersonnage = filtrePersonnage.Trim();
+        filtreSaison = filtreSaison.Trim();
+
+        citationsAffichees = (string.IsNullOrWhiteSpace(filtrePersonnage) && string.IsNullOrWhiteSpace(filtreSaison))
+            ? citations
+            : citations?.Where(c =>
+                (string.IsNullOrWhiteSpace(filtrePersonnage) || c.Infos.Personnage.Contains(filtrePersonnage, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(filtreSaison) || c.Infos.Saison.Contains(filtreSaison, StringComparison.OrdinalIgnoreCase))
+              ).ToList();
+    }
+}
