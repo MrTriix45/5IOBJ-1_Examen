@@ -1,0 +1,26 @@
+@inject NavigationManager NavigationManager
+@page "/login"
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <InputText @bind-Value="loginModel.Login" placeholder="Login" />
+    <InputText @bind-Value="loginModel.Password" type="password" placeholder="Mot de passe" />
+
+    <button type="submit">Login</button>
+</EditForm>
+
+@code {
+    private LoginModel loginModel = new();
+
+    private void HandleLogin()
+    {
+        if (loginModel.Login == "admin" && loginModel.Password == "1234")
+        {
+            NavigationManager.NavigateTo("/kaamelott");
+        }
+    }
+
+    public class LoginModel
+    {
+        public string Login { get; set; }
+        public string Password { get; set; }
+    }
+}

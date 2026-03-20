@@ -1,20 +1,25 @@
-﻿<div class="menu-nav">
+﻿
+@inject NavigationManager NavigationManager
+
+<div class="menu-nav">
     <ul class="nav flex-row">
-        <li class="nav-item">
-            <NavLink class="nav-link" href="">Home</NavLink>
-        </li>
-        <li class="nav-item">
-            <NavLink class="nav-link" href="counter">Counter</NavLink>
-        </li>
-        <li class="nav-item">
-            <NavLink class="nav-link" href="fetchdata">Je ne sais pas</NavLink>
-        </li>
-        <li>
-            <NavLink class="nav-link" href="kaamelott">Kaamelott</NavLink>
-        </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="">Home</NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="counter">Counter</NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="weather">Weather</NavLink>
+            </li>
+            <li>
+                <NavLink class="nav-link" href="kaamelott">Kaamelott</NavLink>
+            </li>
+            <li>
+                <NavLink class="nav-link" href="kaamelott-favori">Mes favoris</NavLink>
+            </li>
     </ul>
 </div>
 
 @code {
-    
 }

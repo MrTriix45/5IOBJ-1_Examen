@@ -1,5 +1,6 @@
 @page "/kaamelott"
 @inject HttpClient Http
+@inject FavorisService FavorisService
 <h1>Kaamelott</h1>
 
 <div>
@@ -15,11 +16,15 @@
 {
     <p><em>Loading...</em></p>
 }
-else if (citationsAffichees != null)
+else
 {
-    @if (!citationsAffichees.Any())
+    var affichees = citationsAffichees ?? citations;
+    var paginees = affichees.Skip((pageCourante - 1) * taillePage).Take(taillePage).ToList();
+    int totalPages = (int)Math.Ceiling((double)affichees.Count / taillePage);
+
+    @if (!affichees.Any())
     {
-        <p><em>Aucune citation trouvée pour ce personnage.</em></p>
+        <p><em>Aucune citation trouvée.</em></p>
     }
     else
     {
@@ -30,20 +35,28 @@ else if (citationsAffichees != null)
                     <th>Saison</th>
                     <th>Episode</th>
                     <th>Citation</th>
+                    <th>Bouton Magique</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in citationsAffichees)
+                @foreach (var quote in paginees)
                 {
                     <tr>
-                        <td>@item.Infos.Personnage</td>
-                        <td>@item.Infos.Saison</td>
-                        <td>@item.Infos.Episode</td>
-                        <td>@item.Citation</td>
+                        <td>@quote.Infos.Personnage</td>
+                        <td>@quote.Infos.Saison</td>
+                        <td>@quote.Infos.Episode</td>
+                        <td class="row-quote">@quote.Citation</td>
+                        <td><button @onclick="() => AjouterFavori(quote)" disabled="@FavorisService.EstEnFavoris(quote)">Ajouter Favori</button></td> <!-- Désactive le bouton si la citation est déjà dans les favoris -->
                     </tr>
                 }
             </tbody>
         </table>
+
+        <div>
+            <button @onclick="PagePrecedente" disabled="@(pageCourante <= 1)">Précédent</button>
+            <span>Page @pageCourante / @totalPages</span>
+            <button @onclick="PageSuivante" disabled="@(pageCourante >= totalPages)">Suivant</button>
+        </div>
     }
 }
 @code{
@@ -52,33 +65,18 @@ else if (citationsAffichees != null)
     private string filtrePersonnage = "";
     private string filtreSaison = "";
     private List<KaamelottCitation>? citationsAffichees;
-    public class KaamelottResponse
-    {
-        public int Status { get; set; }
-        public List<KaamelottCitation> Citation { get; set; }
-    }
-
-    public class KaamelottCitation
-    {
-        public string Citation { get; set; }
-        public KaamelottCitationInfo Infos { get; set; }
-    }
-
-    public class KaamelottCitationInfo
-    {
-        public string Auteur { get; set; }
-        public string Acteur { get; set; }
-        public string Personnage { get; set; }
-        public string Saison { get; set; }
-        public string Episode { get; set; }
-    }
+    private int pageCourante = 1;
+    private int taillePage = 15;
 
     protected override async Task OnInitializedAsync()
     {
-        var client = new HttpClient();
-        response = await client.GetFromJsonAsync<KaamelottResponse>("http://localhost:5138/api/kaamelott");
+        await FavorisService.InitialiserAsync();
+        response = await Http.GetFromJsonAsync<KaamelottResponse>("http://localhost:5138/api/kaamelott");
         citations = response?.Citation;
     }
+    private void PagePrecedente() { if (pageCourante > 1) pageCourante--; }
+    private void PageSuivante() { pageCourante++; }
+
     private void AppliquerFiltres()
     {
         filtrePersonnage = filtrePersonnage.Trim();
@@ -90,5 +88,11 @@ else if (citationsAffichees != null)
                 (string.IsNullOrWhiteSpace(filtrePersonnage) || c.Infos.Personnage.Contains(filtrePersonnage, StringComparison.OrdinalIgnoreCase)) &&
                 (string.IsNullOrWhiteSpace(filtreSaison) || c.Infos.Saison.Contains(filtreSaison, StringComparison.OrdinalIgnoreCase))
               ).ToList();
+        pageCourante = 1;
+    }
+
+    private async Task AjouterFavori(KaamelottCitation citation)
+    {
+        await FavorisService.AjouterAsync(citation);
     }
 }

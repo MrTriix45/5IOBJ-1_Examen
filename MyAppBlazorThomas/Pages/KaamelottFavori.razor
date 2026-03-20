@@ -1,0 +1,45 @@
+@page "/kaamelott-favori"
+@inject FavorisService FavorisService
+<h1>Ma Liste de citations favorites</h1>
+
+@if (!FavorisService.Favoris.Any())
+{
+    <p><em>Aucun favori pour l'instant.</em></p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Personnage</th>
+                <th>Saison</th>
+                <th>Episode</th>
+                <th>Citation</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var quote in FavorisService.Favoris)
+            {
+                <tr>
+                    <td>@quote.Infos.Personnage</td>
+                    <td>@quote.Infos.Saison</td>
+                    <td>@quote.Infos.Episode</td>
+                    <td class="row-quote">@quote.Citation</td>
+                    <td><button @onclick="() => RetirerFavori(quote)">Retirer</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await FavorisService.InitialiserAsync();
+    }
+
+    private async Task RetirerFavori(KaamelottCitation citation)
+    {
+        await FavorisService.RetirerAsync(citation);
+    }
+}
