@@ -1,5 +1,7 @@
 @page "/kaamelott-favori"
 @inject FavorisService FavorisService
+@inject MyAppBlazorThomas.Services.CompteService CompteService
+@inject NavigationManager NavigationManager
 <h1>Ma Liste de citations favorites</h1>
 
 @if (!FavorisService.Favoris.Any())
@@ -35,6 +37,13 @@ else
 @code {
     protected override async Task OnInitializedAsync()
     {
+        await CompteService.InitialiserAsync();
+        if (!CompteService.EstConnecte)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
         await FavorisService.InitialiserAsync();
     }
 

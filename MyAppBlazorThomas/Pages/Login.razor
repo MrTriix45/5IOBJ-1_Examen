@@ -1,4 +1,6 @@
 @inject NavigationManager NavigationManager
+@inject MyAppBlazorThomas.Services.CompteService CompteService
+@page "/"
 @page "/login"
 <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
     <InputText @bind-Value="loginModel.Login" placeholder="Login" />
@@ -10,11 +12,25 @@
 @code {
     private LoginModel loginModel = new();
 
-    private void HandleLogin()
+    protected override async Task OnInitializedAsync()
     {
-        if (loginModel.Login == "admin" && loginModel.Password == "1234")
+        await CompteService.InitialiserAsync();
+        if (CompteService.EstConnecte)
         {
             NavigationManager.NavigateTo("/kaamelott");
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        if (!string.IsNullOrWhiteSpace(loginModel.Login) && loginModel.Password == "1234")
+        {
+            await CompteService.ConnexionAsync(loginModel.Login);
+            NavigationManager.NavigateTo("/kaamelott");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/not-found");
         }
     }
 

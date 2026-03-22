@@ -1,6 +1,8 @@
 @page "/kaamelott"
 @inject HttpClient Http
 @inject FavorisService FavorisService
+@inject MyAppBlazorThomas.Services.CompteService CompteService
+@inject NavigationManager NavigationManager
 <h1>Kaamelott</h1>
 
 <div>
@@ -70,6 +72,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await CompteService.InitialiserAsync();
+        if (!CompteService.EstConnecte)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
         await FavorisService.InitialiserAsync();
         response = await Http.GetFromJsonAsync<KaamelottResponse>("http://localhost:5138/api/kaamelott");
         citations = response?.Citation;

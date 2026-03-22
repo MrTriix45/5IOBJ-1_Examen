@@ -26,24 +26,27 @@ public class KaamelottResponse
 
 public class FavorisService
 {
-    private const string StorageKey = "kaamelott.favoris";
     private readonly IJSRuntime _jsRuntime;
-    private bool _isInitialized;
+    private readonly CompteService _compteService;
+    private string? _storageKeyLoadedFor;
 
-    public FavorisService(IJSRuntime jsRuntime)
+    public FavorisService(IJSRuntime jsRuntime, CompteService compteService)
     {
         _jsRuntime = jsRuntime;
+        _compteService = compteService;
     }
 
     public List<KaamelottCitation> Favoris { get; } = new();
 
     public async Task InitialiserAsync()
     {
-        // Pas à charger deux fois
-        if (_isInitialized)
+        await _compteService.InitialiserAsync();
+
+        string storageKey = GetStorageKey();
+        if (string.Equals(_storageKeyLoadedFor, storageKey, StringComparison.Ordinal))
             return;
 
-        string? rawFavoris = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+        string? rawFavoris = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", storageKey);
         if (!string.IsNullOrWhiteSpace(rawFavoris))
         {
             var favorisCharges = JsonSerializer.Deserialize<List<KaamelottCitation>>(rawFavoris);
@@ -53,8 +56,12 @@ public class FavorisService
                 Favoris.AddRange(favorisCharges);
             }
         }
+        else
+        {
+            Favoris.Clear();
+        }
 
-        _isInitialized = true;
+        _storageKeyLoadedFor = storageKey;
     }
 
     public bool EstEnFavoris(KaamelottCitation citation)
@@ -83,8 +90,22 @@ public class FavorisService
 
     private async Task SauvegarderAsync()
     {
+        await _compteService.InitialiserAsync();
+
+        string storageKey = GetStorageKey();
+
         string favorisJson = JsonSerializer.Serialize(Favoris);
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, favorisJson);
+        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", storageKey, favorisJson);
+    }
+
+    private string GetStorageKey()
+    {
+        if (_compteService.EstConnecte)
+        {
+            return $"kaamelott.favoris.{_compteService.GetLoginStorageSafe()}";
+        }
+
+        return "kaamelott.favoris.anonyme";
     }
 
     private static bool MemeCitation(KaamelottCitation left, KaamelottCitation right)

@@ -1,25 +1,32 @@
-﻿
-@inject NavigationManager NavigationManager
+﻿@inject NavigationManager Nav
+@inject MyAppBlazorThomas.Services.CompteService CompteService
 
 <div class="menu-nav">
     <ul class="nav flex-row">
-            <li class="nav-item">
-                <NavLink class="nav-link" href="">Home</NavLink>
-            </li>
-            <li class="nav-item">
-                <NavLink class="nav-link" href="counter">Counter</NavLink>
-            </li>
-            <li class="nav-item">
-                <NavLink class="nav-link" href="weather">Weather</NavLink>
-            </li>
             <li>
                 <NavLink class="nav-link" href="kaamelott">Kaamelott</NavLink>
             </li>
             <li>
                 <NavLink class="nav-link" href="kaamelott-favori">Mes favoris</NavLink>
             </li>
+            @if (CompteService.EstConnecte)
+            {
+                <li>
+                    <button class="nav-link" @onclick="Logout">Déconnexion</button>
+                </li>
+            }
     </ul>
 </div>
 
 @code {
+    protected override async Task OnInitializedAsync()
+    {
+        await CompteService.InitialiserAsync();
+    }
+
+    private async Task Logout()
+    {
+        await CompteService.DeconnexionAsync();
+        Nav.NavigateTo("/login");
+    }
 }

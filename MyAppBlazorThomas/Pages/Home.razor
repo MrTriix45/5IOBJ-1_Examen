@@ -1,7 +1,38 @@
-﻿@page "/"
+﻿@page "/home"
 
-<PageTitle>Home</PageTitle>
+@inject NavigationManager NavigationManager
+@inject MyAppBlazorThomas.Services.CompteService CompteService
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <InputText @bind-Value="loginModel.Login" placeholder="Login" />
+    <InputText @bind-Value="loginModel.Password" type="password" placeholder="Mot de passe" />
 
-<h1>Hello, world!</h1>
+    <button type="submit">Login</button>
+</EditForm>
 
-Welcome to your new app.
+@code {
+    private LoginModel loginModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CompteService.InitialiserAsync();
+        if (CompteService.EstConnecte)
+        {
+            NavigationManager.NavigateTo("/kaamelott");
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        if (!string.IsNullOrWhiteSpace(loginModel.Login) && loginModel.Password == "1234")
+        {
+            await CompteService.ConnexionAsync(loginModel.Login);
+            NavigationManager.NavigateTo("/kaamelott");
+        }
+    }
+
+    public class LoginModel
+    {
+        public string Login { get; set; }
+        public string Password { get; set; }
+    }
+}
